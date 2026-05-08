@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/maxeodev/atomicwatch
-  tag: "0.2.6"
+  tag: "0.2.7"
   pullPolicy: IfNotPresent
   pullSecret: ghcr-pull-secret
 

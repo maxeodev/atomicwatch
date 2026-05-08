@@ -33,6 +33,10 @@ spec:
         supplementalGroups: {{ toJson .Values.security.supplementalGroups }}
         seccompProfile:
           type: RuntimeDefault
+      {{- if .Values.image.pullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecret }}
+      {{- end }}
 
       # ── Init container: download GeoIP databases ───────────────────────────
       initContainers:

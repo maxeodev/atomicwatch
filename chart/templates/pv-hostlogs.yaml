@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: atomicwatch-hostlogs
+  labels:
+    {{- include "atomicwatch.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: {{ .Values.nfs.server }}
+    path: {{ .Values.nfs.path }}
+  mountOptions:
+    - ro
+    - soft
+    - timeo=30

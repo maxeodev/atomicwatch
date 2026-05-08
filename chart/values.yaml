@@ -41,9 +41,9 @@ geoip:
   cityDb: dbip-city-lite.mmdb
   asnDb: dbip-asn-lite.mmdb
 
-hostLogs:
-  fail2banLog: /var/log/fail2ban.log
-  cowrieDir: /opt/atomicwatch/cowrie
+nfs:
+  server: 192.168.200.1
+  path: /opt/atomicwatch
 
 probes:
   liveness:

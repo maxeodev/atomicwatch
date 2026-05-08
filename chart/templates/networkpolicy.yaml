@@ -27,3 +27,8 @@ spec:
     - ports:
         - port: 443
           protocol: TCP
+    # ICMP n'est pas supporté comme protocol dans k8s NetworkPolicy.
+    # Cette règle sans ports autorise tout protocole (y compris ICMP) vers internet,
+    # nécessaire pour traceroute (-I) qui envoie des ICMP echo-request.
+    - {}
+

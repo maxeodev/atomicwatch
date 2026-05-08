@@ -201,7 +201,7 @@ async def get_ip_traceroute(ip: str):
 
     try:
         proc = await asyncio.create_subprocess_exec(
-            "traceroute", "-n", "-m", "20", "-w", "2", ip,
+            "traceroute", "-n", "-m", "20", "-w", "2", "-I", ip,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )

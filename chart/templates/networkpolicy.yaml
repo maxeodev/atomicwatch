@@ -6,29 +6,15 @@ metadata:
   labels:
     {{- include "atomicwatch.labels" . | nindent 4 }}
   annotations:
-    purpose: "Ingress Traefik sur 8000. Egress DNS + HTTPS pour GeoIP download."
+    purpose: "Ingress Traefik sur 8000 uniquement. Egress non restreint (ICMP traceroute + RIPEstat + GeoIP)."
 spec:
   podSelector:
     matchLabels:
       {{- include "atomicwatch.selectorLabels" . | nindent 6 }}
   policyTypes:
     - Ingress
-    - Egress
   ingress:
     - ports:
         - port: 8000
           protocol: TCP
-  egress:
-    - ports:
-        - port: 53
-          protocol: UDP
-        - port: 53
-          protocol: TCP
-    - ports:
-        - port: 443
-          protocol: TCP
-    # ICMP n'est pas supporté comme protocol dans k8s NetworkPolicy.
-    # Cette règle sans ports autorise tout protocole (y compris ICMP) vers internet,
-    # nécessaire pour traceroute (-I) qui envoie des ICMP echo-request.
-    - {}
 

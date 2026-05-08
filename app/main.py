@@ -16,12 +16,14 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="AtomicWatch", lifespan=lifespan)
+APP_VERSION = "0.2.8"
+
+app = FastAPI(title="AtomicWatch", version=APP_VERSION, lifespan=lifespan)
 
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {"status": "ok", "version": APP_VERSION}
 
 
 app.include_router(router, prefix="/api")

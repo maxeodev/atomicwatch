@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "atomicwatch.labels" . | nindent 4 }}
   annotations:
-    purpose: "Autorise uniquement le trafic Traefik entrant sur 8000. Aucun trafic sortant réseau (tout accès aux données est local via HostPath)."
+    purpose: "Ingress Traefik sur 8000. Egress DNS + HTTPS pour GeoIP download."
 spec:
   podSelector:
     matchLabels:
@@ -18,4 +18,12 @@ spec:
     - ports:
         - port: 8000
           protocol: TCP
-  egress: []
+  egress:
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    - ports:
+        - port: 443
+          protocol: TCP

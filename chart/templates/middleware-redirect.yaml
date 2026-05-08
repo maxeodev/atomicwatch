@@ -1,0 +1,11 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "atomicwatch.fullname" . }}-https-redirect
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "atomicwatch.labels" . | nindent 4 }}
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true

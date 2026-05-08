@@ -1,0 +1,40 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "atomicwatch.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "atomicwatch.labels" . | nindent 4 }}
+  annotations:
+    {{- if .Values.ingress.tls }}
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.clusterIssuer }}
+    {{- end }}
+    traefik.ingress.kubernetes.io/router.entrypoints: "web,websecure"
+    {{- $ns := .Release.Namespace }}
+    {{- $name := include "atomicwatch.fullname" . }}
+    {{- if .Values.basicAuth.enabled }}
+    traefik.ingress.kubernetes.io/router.middlewares: "{{ $ns }}-{{ $name }}-https-redirect@kubernetescrd,{{ $ns }}-{{ $name }}-basicauth@kubernetescrd"
+    {{- else }}
+    traefik.ingress.kubernetes.io/router.middlewares: "{{ $ns }}-{{ $name }}-https-redirect@kubernetescrd"
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ include "atomicwatch.fullname" . }}-tls
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "atomicwatch.fullname" . }}
+                port:
+                  name: http
+{{- end }}

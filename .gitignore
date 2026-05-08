@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+*.mmdb
+*.jsonl
+.env
+.env.*
+*.log
+.DS_Store
+*.txt

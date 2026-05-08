@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "atomicwatch.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "atomicwatch.labels" . | nindent 4 }}
+  annotations:
+    purpose: "Autorise uniquement le trafic Traefik entrant sur 8000. Aucun trafic sortant réseau (tout accès aux données est local via HostPath)."
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "atomicwatch.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - port: 8000
+          protocol: TCP
+  egress: []

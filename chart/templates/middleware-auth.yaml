@@ -1,0 +1,13 @@
+{{- if .Values.basicAuth.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "atomicwatch.fullname" . }}-basicauth
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "atomicwatch.labels" . | nindent 4 }}
+spec:
+  basicAuth:
+    secret: {{ include "atomicwatch.fullname" . }}-basicauth
+    removeHeader: true
+{{- end }}

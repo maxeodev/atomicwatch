@@ -1,0 +1,6 @@
+apiVersion: v2
+name: atomicwatch
+description: AtomicWatch - Monitoring en temps réel des IPs entrantes avec géolocalisation
+type: application
+version: 0.1.3
+appVersion: "0.2.6"

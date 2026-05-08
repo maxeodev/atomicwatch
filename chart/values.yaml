@@ -1,0 +1,53 @@
+image:
+  repository: ghcr.io/maxeodev/atomicwatch
+  tag: "0.2.6"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+security:
+  runAsUser: 1001
+  runAsGroup: 1001
+  supplementalGroups:
+    - 4
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  className: traefik
+  host: atomicwatch.51.83.100.146.nip.io
+  tls: true
+  clusterIssuer: letsencrypt-production
+
+basicAuth:
+  enabled: true
+  # Secret managed via SealedSecret — ne pas mettre la valeur ici
+  # Générer avec : kubectl create secret ... | kubeseal > secrets/sealed-basicauth.yaml
+
+geoip:
+  cityDb: dbip-city-lite.mmdb
+  asnDb: dbip-asn-lite.mmdb
+
+hostLogs:
+  fail2banLog: /var/log/fail2ban.log
+  cowrieDir: /opt/atomicwatch/cowrie
+
+probes:
+  liveness:
+    initialDelaySeconds: 15
+    periodSeconds: 30
+  readiness:
+    initialDelaySeconds: 3
+    periodSeconds: 8

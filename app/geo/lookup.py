@@ -1,9 +1,11 @@
 import os
 import geoip2.database
 import geoip2.errors
+from cachetools import LRUCache
 
 _city_reader: geoip2.database.Reader | None = None
 _asn_reader: geoip2.database.Reader | None = None
+_geo_cache: LRUCache = LRUCache(maxsize=65536)
 
 
 def init_readers(city_db: str, asn_db: str) -> None:
@@ -15,6 +17,8 @@ def init_readers(city_db: str, asn_db: str) -> None:
 
 
 def lookup(ip: str) -> dict:
+    if ip in _geo_cache:
+        return _geo_cache[ip]
     result = {
         "country_code": "XX",
         "country_name": "Unknown",
@@ -44,6 +48,7 @@ def lookup(ip: str) -> dict:
         except (geoip2.errors.AddressNotFoundError, Exception):
             pass
 
+    _geo_cache[ip] = result
     return result
 
 

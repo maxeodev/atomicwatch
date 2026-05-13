@@ -22,6 +22,7 @@ router = APIRouter()
 
 _cache: TTLCache = TTLCache(maxsize=16, ttl=30)
 _fw_cache: TTLCache = TTLCache(maxsize=4, ttl=30)
+_cowrie_cache: TTLCache = TTLCache(maxsize=4, ttl=60)
 _traceroute_cache: TTLCache = TTLCache(maxsize=32, ttl=600)
 _intel_cache: TTLCache = TTLCache(maxsize=64, ttl=3600)
 
@@ -140,7 +141,7 @@ async def _get_merged_data() -> list[dict]:
 
     result.sort(key=lambda x: x["attempts"], reverse=True)
 
-    cowrie_ip_set = {s["src_ip"] for s in cowrie_sessions(COWRIE_LOG) if s.get("src_ip")}
+    cowrie_ip_set = {s["src_ip"] for s in await _get_cowrie_sessions() if s.get("src_ip")}
     for item in result:
         item["in_honeypot"] = item["ip"] in cowrie_ip_set
 
@@ -154,6 +155,24 @@ async def _get_fw_data() -> list[dict]:
         return _fw_cache[cache_key]
     data = parse_firewall_drops(FIREWALL_LOG)
     _fw_cache[cache_key] = data
+    return data
+
+
+async def _get_cowrie_sessions() -> list[dict]:
+    k = "sessions"
+    if k in _cowrie_cache:
+        return _cowrie_cache[k]
+    data = cowrie_sessions(COWRIE_LOG)
+    _cowrie_cache[k] = data
+    return data
+
+
+async def _get_cowrie_summary_data() -> dict:
+    k = "summary"
+    if k in _cowrie_cache:
+        return _cowrie_cache[k]
+    data = cowrie_summary(COWRIE_LOG)
+    _cowrie_cache[k] = data
     return data
 
 
@@ -281,7 +300,7 @@ async def get_ip_intel(ip: str):
         pass
 
     # Honeypot correlation
-    sessions = cowrie_sessions(COWRIE_LOG)
+    sessions = await _get_cowrie_sessions()
     ip_sessions = [s for s in sessions if s.get("src_ip") == ip]
     honeypot = {
         "seen": len(ip_sessions) > 0,
@@ -496,12 +515,12 @@ async def get_firewall_recent(limit: int = Query(default=100, le=500)):
 
 @router.get("/cowrie/summary")
 async def get_cowrie_summary():
-    return cowrie_summary(COWRIE_LOG)
+    return await _get_cowrie_summary_data()
 
 
 @router.get("/cowrie/sessions")
 async def get_cowrie_sessions_list():
-    return cowrie_sessions(COWRIE_LOG)
+    return await _get_cowrie_sessions()
 
 
 @router.get("/cowrie/sessions/{session_id}")

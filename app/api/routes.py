@@ -384,41 +384,49 @@ async def get_timeline():
 
 @router.get("/stats/summary")
 async def get_summary():
+    cache_key = "summary"
+    if cache_key in _cache:
+        return _cache[cache_key]
+
     data = await _get_merged_data()
     fw   = await _get_fw_data()
 
-    banned = sum(1 for d in data if d["status"] == "banned")
+    banned         = sum(1 for d in data if d["status"] == "banned")
     total_attempts = sum(d["attempts"] for d in data)
 
-    # IPs uniques SSH
-    ssh_ips = {d["ip"] for d in data}
+    ssh_ips      = {d["ip"] for d in data}
     ssh_countries = {d["country_code"] for d in data if d["country_code"] != "XX"}
 
-    # IPs uniques firewall + pays (geo lookup depuis le cache)
-    fw_ips = {e["ip"] for e in fw}
+    # Dédupliquer par IP AVANT le geo lookup :
+    # 136 201 drops bruts → 15 670 IPs uniques → 8.7× moins de lookups
+    fw_ip_counts: dict[str, int] = defaultdict(int)
+    for e in fw:
+        fw_ip_counts[e["ip"]] += 1
+
+    fw_ips = set(fw_ip_counts.keys())
     fw_countries: set[str] = set()
-    # Agréger aussi les drops par pays pour le top country combiné
     combined_country_hits: dict[str, dict] = defaultdict(lambda: {"count": 0, "name": "", "flag": ""})
+
     for d in data:
         cc = d["country_code"]
         if cc != "XX":
-            fw_countries  # (pas fw_countries ici, c'est ssh)
             combined_country_hits[cc]["count"] += d["attempts"]
             combined_country_hits[cc]["name"]   = d["country_name"]
             combined_country_hits[cc]["flag"]   = d["flag"]
-    for e in fw:
-        g = geo.lookup(e["ip"])
+
+    for ip, count in fw_ip_counts.items():
+        g = geo.lookup(ip)
         cc = g["country_code"]
         if cc != "XX":
             fw_countries.add(cc)
-            combined_country_hits[cc]["count"] += 1
+            combined_country_hits[cc]["count"] += count
             combined_country_hits[cc]["name"]   = g["country_name"]
             combined_country_hits[cc]["flag"]   = g["flag"]
 
-    top_cc = max(combined_country_hits.items(), key=lambda x: x[1]["count"], default=(None, {}))
+    top_cc    = max(combined_country_hits.items(), key=lambda x: x[1]["count"], default=(None, {}))
     top_entry = top_cc[1] if top_cc[0] else {}
 
-    return {
+    result = {
         "total_ips":        len(ssh_ips | fw_ips),
         "ssh_ips":          len(ssh_ips),
         "fw_ips":           len(fw_ips),
@@ -430,6 +438,8 @@ async def get_summary():
         "top_country_flag": top_entry.get("flag"),
         "last_updated":     datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
+    _cache[cache_key] = result
+    return result
 
 
 # ── Firewall drops ────────────────────────────────────────────────────────────

@@ -22,7 +22,7 @@ router = APIRouter()
 
 _cache: TTLCache = TTLCache(maxsize=16, ttl=30)
 _fw_cache: TTLCache = TTLCache(maxsize=4, ttl=30)
-_cowrie_cache: TTLCache = TTLCache(maxsize=4, ttl=60)
+_cowrie_cache: TTLCache = TTLCache(maxsize=4, ttl=300)
 _traceroute_cache: TTLCache = TTLCache(maxsize=32, ttl=600)
 _intel_cache: TTLCache = TTLCache(maxsize=64, ttl=3600)
 
@@ -162,7 +162,8 @@ async def _get_cowrie_sessions() -> list[dict]:
     k = "sessions"
     if k in _cowrie_cache:
         return _cowrie_cache[k]
-    data = cowrie_sessions(COWRIE_LOG)
+    loop = asyncio.get_event_loop()
+    data = await loop.run_in_executor(None, cowrie_sessions, COWRIE_LOG)
     _cowrie_cache[k] = data
     return data
 
@@ -171,7 +172,8 @@ async def _get_cowrie_summary_data() -> dict:
     k = "summary"
     if k in _cowrie_cache:
         return _cowrie_cache[k]
-    data = cowrie_summary(COWRIE_LOG)
+    loop = asyncio.get_event_loop()
+    data = await loop.run_in_executor(None, cowrie_summary, COWRIE_LOG)
     _cowrie_cache[k] = data
     return data
 

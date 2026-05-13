@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-APP_VERSION = "0.2.13"
+APP_VERSION = "0.2.14"
 
 app = FastAPI(title="AtomicWatch", version=APP_VERSION, lifespan=lifespan)
 
